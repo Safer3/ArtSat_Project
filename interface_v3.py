@@ -137,19 +137,49 @@ QRadioButton::indicator:checked {
         # ---------- ПРАВАЯ ЧАСТЬ ----------
         right_layout = QVBoxLayout()
 
-        image_box = QGroupBox("Визуализация орбиты")
+        image_box = QGroupBox()
         image_layout = QVBoxLayout()
 
         # self.image = QLabel("Здесь будет изображение орбиты")     by_Besolea
         # self.image.setAlignment(Qt.AlignCenter)
 
+        #self.canvas = create_animation_widget()
+        #image_layout.addWidget(self.canvas)
+
+        tabs_group = QGroupBox("Отображение")
+        tabs_layout = QHBoxLayout()
+
+        self.view1 = QRadioButton("Визуализация")
+        self.view2 = QRadioButton("Орбита")
+
+        self.view1.setChecked(True)
+
+        tabs_layout.addWidget(self.view1)
+        tabs_layout.addWidget(self.view2)
+        tabs_group.setLayout(tabs_layout)
+
+        right_layout.addWidget(tabs_group)
+
+
+        self.right_stack = QStackedWidget()
+
+        # первое окно
         self.canvas = create_animation_widget()
-        image_layout.addWidget(self.canvas)
+        self.right_stack.addWidget(self.canvas)
+
+        # второе окно
+        self.second_page = QLabel("Второе окно")
+        self.second_page.setAlignment(Qt.AlignCenter)
+        self.right_stack.addWidget(self.second_page)
+
+        image_layout.addWidget(self.right_stack)
 
         # image_layout.addWidget(self.image)
         image_box.setLayout(image_layout)
 
         right_layout.addWidget(image_box)
+
+        self.view1.toggled.connect(self.switch_right_view)
 
         # ---------- СБОРКА ----------
         main_layout.addLayout(left_layout, 2)
@@ -159,6 +189,9 @@ QRadioButton::indicator:checked {
         # ---------- СОБЫТИЯ ----------
         self.mode1.toggled.connect(self.switch_mode)
         self.calc_button.clicked.connect(self.collect_data)
+
+    def switch_right_view(self):
+        self.right_stack.setCurrentIndex(0 if self.view1.isChecked() else 1)    
 
     # ---------- ВАЛИДАТОР ----------
     def set_validator(self, field):
