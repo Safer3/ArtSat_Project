@@ -7,7 +7,7 @@ import sys
 from PySide6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout,
-    QRadioButton, QGroupBox, QStackedWidget, QDialog, QScrollArea
+    QRadioButton, QGroupBox, QStackedWidget, QDialog, QScrollArea, QFileDialog
     
 )
 from PySide6.QtCore import Qt
@@ -182,6 +182,18 @@ class OrbitApp(QWidget):
 
         right_layout.addWidget(image_box)
 
+
+        # кнопка загрузки файла
+        self.load_button = QPushButton("Загрузить файл")
+
+        # контейнер для выравнивания вправо вниз
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()  # сдвигает кнопку вправо
+        btn_layout.addWidget(self.load_button)
+
+        right_layout.addLayout(btn_layout)
+
+
         self.view1.toggled.connect(self.switch_right_view)
 
         # ---------- СБОРКА ----------
@@ -192,6 +204,37 @@ class OrbitApp(QWidget):
         # ---------- СОБЫТИЯ ----------
         self.mode1.toggled.connect(self.switch_mode)
         self.calc_button.clicked.connect(self.collect_data)
+        self.load_button.clicked.connect(self.open_file)
+
+    def open_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Выберите текстовый файл",
+            "",
+            "Text Files (*.txt);;All Files (*)"
+        )
+
+        if file_path:
+            try:
+                # пробуем разные кодировки
+                for enc in ["utf-8", "utf-16", "cp1251"]:
+                    try:
+                        with open(file_path, "r", encoding=enc) as f:
+                            content = f.read()
+                        print(f"Файл прочитан в кодировке: {enc}")
+                        break
+                    except UnicodeDecodeError:
+                        continue
+                else:
+                    raise Exception("Не удалось определить кодировку")
+
+                print(content)
+                self.loaded_text = content
+
+            except Exception as e:
+                #self.overlay = Overlay(f"Ошибка чтения файла: {e}", self)
+                #self.overlay.show()  
+                print(f"Ошибка чтения файла: {str(e)}", self)  
 
     def switch_right_view(self):
         self.right_stack.setCurrentIndex(0 if self.view1.isChecked() else 1)    
