@@ -1,5 +1,5 @@
-from main_2 import create_animation_widget, connection_loop
-import threading
+from data_simulation import create_animation_widget, connection_loop
+#import threading
 
 from styles import styles
 
@@ -230,6 +230,9 @@ class OrbitApp(QWidget):
 
                 print(content)
                 self.loaded_text = content
+                get_d(list(map(int, content.split())))
+                
+                
 
             except Exception as e:
                 #self.overlay = Overlay(f"Ошибка чтения файла: {e}", self)
@@ -513,7 +516,7 @@ class OrbitApp(QWidget):
 
         if self.mode1.isChecked():
             self.input_data = {
-                "mu": float(self.mu1.text() or 398600.4418),
+                "mu": float(self.mu1.text().replace(',', '.') or 398600.4418),
                 "x": float(self.x.text().replace(',', '.') or 0),
                 "y": float(self.y.text().replace(',', '.') or 0),
                 "z": float(self.z.text().replace(',', '.') or 0),
@@ -583,7 +586,7 @@ class OrbitApp(QWidget):
        # print("Вывод:", self.output_data)
 
 
-threading.Thread(target=connection_loop, daemon=True).start() # by Besolea
+#threading.Thread(target=connection_loop, daemon=True).start() # by Besolea
 
 app = QApplication(sys.argv)
 
