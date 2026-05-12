@@ -3,17 +3,22 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.colors as mcolors
 from noise import snoise3
-import threading
+#import threading
 import time
-from multiprocessing.connection import Client
+
+
+#from multiprocessing.connection import Client
 
 # -----------------------------
 # CONNECTION
 # -----------------------------
-ADDRESS = ('localhost', 6000)
-AUTHKEY = b'secret'
-
-latest_values = [0.0] * 7
+# ADDRESS = ('localhost', 6000)
+# AUTHKEY = b'secret'
+latest_values = [1.0] * 5
+def get_d(values):
+    global latest_values
+    latest_values = values #[1.0] * 7
+    return latest_values
 conn = None
 
 # -----------------------------
@@ -96,73 +101,10 @@ def field_to_rgb(field, hue, sat, contrast):
 
     return mcolors.hsv_to_rgb(hsv)
 
-# -----------------------------
-# CONNECTION LOOP
-# -----------------------------
-def connection_loop():
-    global latest_values, conn
 
-    while True:
-        try:
-            print("Подключение к GUI...")
-            conn = Client(ADDRESS, authkey=AUTHKEY)
-            print("Подключено!")
-
-            while True:
-                latest_values = conn.recv()
-
-        except Exception:
-            print("Переподключение...")
-            time.sleep(1)
 
 def get_measurements():
     return latest_values
-
-# -----------------------------
-# MATPLOTLIB SETUP
-# -----------------------------
-# fig, ax = plt.subplots(figsize=(6, 6))
-# image = ax.imshow(np.zeros((H, W, 3), dtype=np.float32), animated=True)
-# ax.axis("off")
-
-# # -----------------------------
-# # UPDATE LOOP
-# # -----------------------------
-# def update(frame):
-#     raw = get_measurements()
-#     values = [sensors[i].update(raw[i]) for i in range(7)]
-
-#     params = {
-#         "zoom": 1.0,
-#         "speed": 0.2 + values[1] * 1.0,
-#         "octaves": int(2 + values[2] * 3),
-#         "warp": values[3] * 1.5
-#     }
-
-#     hue = values[4]
-#     saturation = 0.6 + values[5] * 0.4
-#     contrast = 1.0 + values[6] * 2.0
-
-#     field = generate_frame(frame * 0.03, params)
-#     rgb = field_to_rgb(field, hue, saturation, contrast)
-
-#     image.set_data(rgb)
-#     return [image]
-
-# # -----------------------------
-# # START
-# # -----------------------------
-# threading.Thread(target=connection_loop, daemon=True).start()
-
-# ani = animation.FuncAnimation(
-#     fig,
-#     update,
-#     interval=30,
-#     blit=True,
-#     cache_frame_data=False
-# )
-
-#plt.show()
 
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
@@ -193,18 +135,19 @@ def create_animation_widget():
         frame["value"] += 1
 
         raw = get_measurements()
-        values = [sensors[i].update(raw[i]) for i in range(7)]
+
+        values = [sensors[i].update(raw[i]) for i in range(5)]# ввод полученных данных
 
         params = {
             "zoom": 1.0,
-            "speed": 0.2 + values[1] * 1.0,
-            "octaves": int(2 + values[2] * 3),
-            "warp": values[3] * 1.5
+            "speed": 0.2 + values[0] * 1.0,
+            "octaves": int(2),
+            "warp": values[1] * 1.5
         }
 
-        hue = values[4]
-        saturation = 0.6 + values[5] * 0.4
-        contrast = 1.0 + values[6] * 2.0
+        hue = values[2]
+        saturation = 0.6 + values[3] * 0.4
+        contrast = 1.0 + values[4] * 2.0
 
         field = generate_frame(frame["value"] * 0.03, params)
         rgb = field_to_rgb(field, hue, saturation, contrast)
@@ -221,53 +164,3 @@ def create_animation_widget():
     canvas.timer = timer
 
     return canvas
-
-
-
-
-
-
-
-# def create_animation_widget():
-    
-#     fig = Figure(figsize=(4, 4))
-#     ax = fig.add_subplot(111)
-
-#     image = ax.imshow(np.zeros((H, W, 3), dtype=np.float32), animated=True)
-#     ax.axis("off")
-
-#     def update(frame):
-#         raw = get_measurements()
-#         values = [sensors[i].update(raw[i]) for i in range(7)]
-
-#         params = {
-#             "zoom": 1.0,
-#             "speed": 0.2 + values[1] * 1.0,
-#             "octaves": int(2 + values[2] * 3),
-#             "warp": values[3] * 1.5
-#         }
-
-#         hue = values[4]
-#         saturation = 0.6 + values[5] * 0.4
-#         contrast = 1.0 + values[6] * 2.0
-
-#         field = generate_frame(frame * 0.03, params)
-#         rgb = field_to_rgb(field, hue, saturation, contrast)
-
-#         canvas.draw_idle()
-
-#         image.set_data(rgb)
-#         return [image]
-
-#     ani = animation.FuncAnimation(
-#         fig,
-#         update,
-#         interval=30,
-#         blit=False,
-#         cache_frame_data=False
-#     )
-
-#     canvas = FigureCanvas(fig)
-#     canvas.ani = ani  # ВАЖНО!
-#     canvas.draw()
-#     return canvas
