@@ -1,4 +1,4 @@
-from data_simulation import create_animation_widget, connection_loop
+from visual import create_animation_widget, get_d#, connection_loop
 #import threading
 
 from styles import styles
@@ -7,13 +7,17 @@ import sys
 from PySide6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout,
-    QRadioButton, QGroupBox, QStackedWidget, QDialog, QScrollArea, QFileDialog
+    QRadioButton, QGroupBox, QStackedWidget, QDialog, QScrollArea, QFileDialog, QSizePolicy
     
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QDoubleValidator, QCursor # для ввода только чисел
 
+from orbit_pyside6 import OrbitGLWidget
+
 import orb_mech_update
+
+import math
 
 dti = {
         'a':'-',
@@ -168,14 +172,32 @@ class OrbitApp(QWidget):
 
         # первое окно
         self.canvas = create_animation_widget()
-        self.right_stack.addWidget(self.canvas)
+
+        container = QWidget()
+
+        container_layout = QVBoxLayout(container)
+        container_layout.setAlignment(Qt.AlignCenter)
+
+        self.canvas.setSizePolicy(
+            QSizePolicy.Expanding,
+            QSizePolicy.Expanding
+        )
+
+        container_layout.addWidget(self.canvas)
+
+        self.right_stack.addWidget(container)
+        
 
         # второе окно
-        self.second_page = QLabel("Второе окно")
-        self.second_page.setAlignment(Qt.AlignCenter)
+        
+        self.second_page = OrbitGLWidget()
+        
+        #self.second_page = QLabel("Второе окно")
+        #self.second_page.setAlignment(Qt.AlignCenter)
         self.right_stack.addWidget(self.second_page)
 
         image_layout.addWidget(self.right_stack)
+        #image_layout.addWidget(self.orbit_view)
 
         # image_layout.addWidget(self.image)
         image_box.setLayout(image_layout)
@@ -221,14 +243,14 @@ class OrbitApp(QWidget):
                     try:
                         with open(file_path, "r", encoding=enc) as f:
                             content = f.read()
-                        print(f"Файл прочитан в кодировке: {enc}")
+                        #print(f"Файл прочитан в кодировке: {enc}")
                         break
                     except UnicodeDecodeError:
                         continue
                 else:
                     raise Exception("Не удалось определить кодировку")
 
-                print(content)
+                #print(content)
                 self.loaded_text = content
                 get_d(list(map(int, content.split())))
                 
@@ -525,13 +547,23 @@ class OrbitApp(QWidget):
                 "vz": float(self.vz.text().replace(',', '.') or 0),
             }
             datapack = orb_mech_update.state_vector_to_elements(**self.input_data)
+            
+            
             #print(datapack)
             if datapack[1] == -1:
                 self.overlay = Overlay(datapack[0], self)
                 self.overlay.show()
-                print(datapack[0])
+                #print(datapack[0])
 
             else:
+                self.second_page.mu = self.input_data['mu']
+                self.second_page.a = datapack[0]['a']
+                self.second_page.e = datapack[0]['e_val']
+                self.second_page.i = math.radians(datapack[0]['i_deg'])
+                self.second_page.Omega = math.radians(datapack[0]['O_deg'])
+                self.second_page.omega = math.radians(datapack[0]['w_deg'])
+                self.second_page.nu0 = math.radians(datapack[0]['nu_deg'])
+                self.second_page._rebuild_orbit()
 
                 dti = datapack[0]
                 
@@ -539,19 +571,19 @@ class OrbitApp(QWidget):
                 if isinstance(dti, str):
                     self.overlay = Overlay(dti, self)
                     self.overlay.show()
-                    print(dti)
+                    #print(dti)
                 else:
                     self.update_output_1(dti)
-                    print(dti)
+                    #print(dti)
 
                 if isinstance(datapack[1], str):
                     self.overlay = Overlay(datapack[1], self)
                     self.overlay.show()
-                    print(datapack[1])
+                    #print(datapack[1])
                 else:
                     self.update_aux1(datapack[1])
 
-                    print(datapack[1])
+                    #print(datapack[1])
             
             
 
@@ -566,6 +598,14 @@ class OrbitApp(QWidget):
                 "nu_deg": float(self.nu_deg.text().replace(',', '.') or 0),
             }
             datapack = orb_mech_update.elements_to_state_vector(**self.input_data)
+            self.second_page.mu = self.input_data["mu"]
+            self.second_page.a = self.input_data["a"]
+            self.second_page.e = self.input_data["e_val"]
+            self.second_page.i = math.radians(self.input_data["i_deg"])
+            self.second_page.Omega = math.radians(self.input_data["O_deg"])
+            self.second_page.omega = math.radians(self.input_data["w_deg"])
+            self.second_page.nu0 = math.radians(self.input_data["nu_deg"])
+            self.second_page._rebuild_orbit()
             dti2 = datapack[0]
             if isinstance(datapack[1], str):
                 self.overlay = Overlay(datapack[1], self)
@@ -575,7 +615,7 @@ class OrbitApp(QWidget):
 
 
            # print(dti2)
-            print(datapack[1])
+            #print(datapack[1])
             self.update_output_2(dti2)
             
        # print("Ввод:", self.input_data)
@@ -587,6 +627,8 @@ class OrbitApp(QWidget):
 
 
 #threading.Thread(target=connection_loop, daemon=True).start() # by Besolea
+
+QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseDesktopOpenGL)
 
 app = QApplication(sys.argv)
 
