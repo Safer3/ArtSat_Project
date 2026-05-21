@@ -345,7 +345,7 @@ class OrbitApp(QWidget):
         labels = [
             ("Большая полуось (а)",self.a_out),
             ("Эксцентриситет",self.e_out),
-            ("Тип орбиты",self.type_out),
+           # ("Тип орбиты",self.type_out),
             ("Наклонение (°)",self.i_out),
             ("Долгота узла (°)",self.node_out),
             ("Аргумент перицентра (°)",self.arg_out),
@@ -549,11 +549,12 @@ class OrbitApp(QWidget):
             datapack = orb_mech_update.state_vector_to_elements(**self.input_data)
             
             
-            #print(datapack)
-            if datapack[1] == -1:
-                self.overlay = Overlay(datapack[0], self)
+            
+            print(datapack)
+            if isinstance(datapack[1], str):
+                self.overlay = Overlay(datapack[1], self)
                 self.overlay.show()
-                #print(datapack[0])
+                #print(0)
 
             else:
                 self.second_page.mu = self.input_data['mu']
@@ -564,7 +565,7 @@ class OrbitApp(QWidget):
                 self.second_page.omega = math.radians(datapack[0]['w_deg'])
                 self.second_page.nu0 = math.radians(datapack[0]['nu_deg'])
                 self.second_page._rebuild_orbit()
-
+                print(1)
                 dti = datapack[0]
                 
 
@@ -598,25 +599,27 @@ class OrbitApp(QWidget):
                 "nu_deg": float(self.nu_deg.text().replace(',', '.') or 0),
             }
             datapack = orb_mech_update.elements_to_state_vector(**self.input_data)
-            self.second_page.mu = self.input_data["mu"]
-            self.second_page.a = self.input_data["a"]
-            self.second_page.e = self.input_data["e_val"]
-            self.second_page.i = math.radians(self.input_data["i_deg"])
-            self.second_page.Omega = math.radians(self.input_data["O_deg"])
-            self.second_page.omega = math.radians(self.input_data["w_deg"])
-            self.second_page.nu0 = math.radians(self.input_data["nu_deg"])
-            self.second_page._rebuild_orbit()
+            print(datapack)
+            
             dti2 = datapack[0]
             if isinstance(datapack[1], str):
                 self.overlay = Overlay(datapack[1], self)
                 self.overlay.show()
             else:
+                self.second_page.mu = self.input_data["mu"]
+                self.second_page.a = self.input_data["a"]
+                self.second_page.e = self.input_data["e_val"]
+                self.second_page.i = math.radians(self.input_data["i_deg"])
+                self.second_page.Omega = math.radians(self.input_data["O_deg"])
+                self.second_page.omega = math.radians(self.input_data["w_deg"])
+                self.second_page.nu0 = math.radians(self.input_data["nu_deg"])
+                self.second_page._rebuild_orbit()
                 self.update_aux2(datapack[1])
 
 
            # print(dti2)
             #print(datapack[1])
-            self.update_output_2(dti2)
+                self.update_output_2(dti2)
             
        # print("Ввод:", self.input_data)
 
