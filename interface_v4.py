@@ -3,6 +3,10 @@ from visual import create_animation_widget, get_d#, connection_loop
 
 from styles import styles
 
+import pandas as pd
+
+import random
+
 import sys
 from PySide6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton,
@@ -233,33 +237,33 @@ class OrbitApp(QWidget):
             self,
             "Выберите текстовый файл",
             "",
-            "Text Files (*.txt);;All Files (*)"
+            "All Files (*)"
         )
 
         if file_path:
             try:
-                # пробуем разные кодировки
-                for enc in ["utf-8", "utf-16", "cp1251"]:
-                    try:
-                        with open(file_path, "r", encoding=enc) as f:
-                            content = f.read()
-                        #print(f"Файл прочитан в кодировке: {enc}")
-                        break
-                    except UnicodeDecodeError:
-                        continue
-                else:
-                    raise Exception("Не удалось определить кодировку")
-
-                #print(content)
-                self.loaded_text = content
-                get_d(list(map(int, content.split())))
+                df = pd.read_csv(file_path)
+                second_row = list(map(float, df.iloc[random.choice(list(range(1, 100)))].tolist()[1:]))
                 
+                #нормировка
+                second_row[0] = (second_row[0]-300) / 200
+                second_row[1] = second_row[1] / 15
+                second_row[2] = second_row[2] / 9
+                second_row[3] = (second_row[3] - 10**(-10))/ 10**(-7) / 10
+                second_row[4] = second_row[4] / 300
+                print(second_row)
+
+                self.loaded_text = second_row
+                get_d(second_row)
+                    
                 
 
             except Exception as e:
-                #self.overlay = Overlay(f"Ошибка чтения файла: {e}", self)
-                #self.overlay.show()  
-                print(f"Ошибка чтения файла: {str(e)}", self)  
+                self.overlay = Overlay(f"Ошибка чтения файла", self)
+                self.overlay.show()  
+                print(f"Ошибка чтения файла", self) 
+            
+            
 
     def switch_right_view(self):
         self.right_stack.setCurrentIndex(0 if self.view1.isChecked() else 1)    
